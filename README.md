@@ -1,47 +1,16 @@
 # Infrastructure Lab
-
 ![CI](https://github.com/XDHx86/SaaS-Blueprint/actions/workflows/ci.yml/badge.svg)
-
-![CodeQL](https://github.com/XDHx86/SaaS-Blueprint/actions/workflows/codeql.yml/badge.svg)
-
 ![Release](https://img.shields.io/github/v/release/XDHx86/SaaS-Blueprint)
-
+![License](https://img.shields.io/github/license/XDHx86/SaaS-Blueprint)
 ![Issues](https://img.shields.io/github/issues/XDHx86/SaaS-Blueprint)
 
-![License](https://img.shields.io/github/license/XDHx86/SaaS-Blueprint)
-
-![Status](https://img.shields.io/badge/status-reference-blueviolet)
-![License](https://img.shields.io/badge/license-MIT-blue)
-![CI](https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)
-
 ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
-![Compose](https://img.shields.io/badge/Docker%20Compose-2496ED?logo=docker&logoColor=white)
-![Caddy](https://img.shields.io/badge/Caddy-1F88C2?logo=caddy&logoColor=white)
-
+![Compose](https://img.shields.io/badge/Compose-2496ED?logo=docker&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
 ![Redis](https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white)
-
+![Caddy](https://img.shields.io/badge/Caddy-v2-1F88C2?logo=caddy&logoColor=white)
 ![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?logo=prometheus&logoColor=white)
 ![Grafana](https://img.shields.io/badge/Grafana-F46800?logo=grafana&logoColor=white)
-
-![ShellCheck](https://img.shields.io/badge/ShellCheck-passing-brightgreen)
-![MarkdownLint](https://img.shields.io/badge/MarkdownLint-passing-brightgreen)
-![Mermaid](https://img.shields.io/badge/Mermaid-validated-success)
-
-![Docs](https://img.shields.io/badge/docs-complete-success)
-![Reference](https://img.shields.io/badge/type-reference-blueviolet)
-
-![Linux](https://img.shields.io/badge/Linux-Ubuntu-E95420?logo=ubuntu&logoColor=white)
-
-![HTTPS](https://img.shields.io/badge/HTTPS-enabled-success)
-![TLS](https://img.shields.io/badge/TLS-Caddy-blue)
-
-![Observability](https://img.shields.io/badge/Observability-Prometheus%20%2B%20Grafana-orange)
-![Backup](https://img.shields.io/badge/Backups-Automated-success)
-
-![Postgres 16](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql)
-![Redis 7](https://img.shields.io/badge/Redis-7-DC382D?logo=redis)
-![Caddy 2](https://img.shields.io/badge/Caddy-v2-1F88C2?logo=caddy)
 
 > An opinionated reference architecture for hosting a modern SaaS application on a single host with Docker Compose — observable, secure by default, and documented as a blueprint you can copy, read, and grow from.
 
