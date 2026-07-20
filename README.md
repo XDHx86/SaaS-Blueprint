@@ -1,6 +1,5 @@
 # Infrastructure Lab
 ![CI](https://github.com/XDHx86/SaaS-Blueprint/actions/workflows/ci.yml/badge.svg)
-<!-- ![CodeQL](https://github.com/XDHx86/SaaS-Blueprint/actions/workflows/codeql.yml/badge.svg) -->
 ![Release](https://img.shields.io/github/v/release/XDHx86/SaaS-Blueprint)
 ![License](https://img.shields.io/github/license/XDHx86/SaaS-Blueprint)
 ![Issues](https://img.shields.io/github/issues/XDHx86/SaaS-Blueprint)
