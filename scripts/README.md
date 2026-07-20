@@ -1,6 +1,6 @@
 # Scripts
 
-Operational one-shots, all POSIX sh (`#!/usr/bin/env sh`) with `set -euo pipefail`. They are safe to re-run **with one destructive exception** — `restore.sh` overwrites the database and prompts for confirmation.
+Operational one-shots, all POSIX sh (`#!/usr/bin/env bash`) with `set -euo pipefail`. They are safe to re-run **with one destructive exception** — `restore.sh` overwrites the database and prompts for confirmation.
 
 Each script is the reference implementation of an operational practice documented under [docs/operations/](../docs/operations/).
 
