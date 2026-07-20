@@ -1,14 +1,14 @@
 # Infrastructure Lab
 
-![CI](https://github.com/<owner>/<repo>/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/XDHx86/SaaS-Blueprint/actions/workflows/ci.yml/badge.svg)
 
-![CodeQL](https://github.com/<owner>/<repo>/actions/workflows/codeql.yml/badge.svg)
+![CodeQL](https://github.com/XDHx86/SaaS-Blueprint/actions/workflows/codeql.yml/badge.svg)
 
-![Release](https://img.shields.io/github/v/release/<owner>/<repo>)
+![Release](https://img.shields.io/github/v/release/XDHx86/SaaS-Blueprint)
 
-![Issues](https://img.shields.io/github/issues/<owner>/<repo>)
+![Issues](https://img.shields.io/github/issues/XDHx86/SaaS-Blueprint)
 
-![License](https://img.shields.io/github/license/<owner>/<repo>)
+![License](https://img.shields.io/github/license/XDHx86/SaaS-Blueprint)
 
 ![Status](https://img.shields.io/badge/status-reference-blueviolet)
 ![License](https://img.shields.io/badge/license-MIT-blue)
