@@ -1,16 +1,16 @@
 # Infrastructure Lab
 ![CI](https://github.com/XDHx86/SaaS-Blueprint/actions/workflows/ci.yml/badge.svg)
-<!-- ![CodeQL](https://github.com/XDHx86/SaaS-Blueprint/actions/workflows/codeql.yml/badge.svg) -->
-![Release](https://img.shields.io/github/v/release/XDHx86/SaaS-Blueprint)
 ![License](https://img.shields.io/github/license/XDHx86/SaaS-Blueprint)
 ![Issues](https://img.shields.io/github/issues/XDHx86/SaaS-Blueprint)
+
 ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
-![Compose](https://img.shields.io/badge/Compose-2496ED?logo=docker&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
 ![Redis](https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white)
 ![Caddy](https://img.shields.io/badge/Caddy-v2-1F88C2?logo=caddy&logoColor=white)
 ![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?logo=prometheus&logoColor=white)
 ![Grafana](https://img.shields.io/badge/Grafana-F46800?logo=grafana&logoColor=white)
+
+
 
 > An opinionated reference architecture for hosting a modern SaaS application on a single host with Docker Compose — observable, secure by default, and documented as a blueprint you can copy, read, and grow from.
 
