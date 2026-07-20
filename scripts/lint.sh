@@ -29,10 +29,12 @@ ENV_ARG=""
 
 check() {
   label="$1"; shift
+  # shellcheck disable=SC2086
   if docker compose $ENV_ARG "$@" config -q >/dev/null 2>&1; then
     printf '  \033[32mPASS\033[0m  %s\n' "$label"
   else
     printf '  \033[31mFAIL\033[0m  %s\n' "$label"
+    # shellcheck disable=SC2086
     docker compose $ENV_ARG "$@" config >/dev/null 2>&1 || true
     fail=1
   fi
@@ -43,11 +45,15 @@ check "base + local override"    -f compose/docker-compose.yml -f compose/docker
 check "base + prod (--compatibility)" --compatibility -f compose/docker-compose.yml -f compose/docker-compose.prod.yml
 
 echo "== diagrams (placeholder) =="
+
 if command -v mmdc >/dev/null 2>&1; then
   for f in architecture/diagrams/*.mmd; do
-    mmdc -i "$f" -o /dev/null >/dev/null 2>&1 \
-      && printf '  \033[32mPASS\033[0m  %s\n' "$f" \
-      || { printf '  \033[31mFAIL\033[0m  %s\n' "$f"; fail=1; }
+    if mmdc -i "$f" -o /dev/null >/dev/null 2>&1; then
+      printf '  \033[32mPASS\033[0m  %s\n' "$f"
+    else
+      printf '  \033[31mFAIL\033[0m  %s\n' "$f"
+      fail=1
+    fi
   done
 else
   echo "  mmdc not installed; diagram rendering not validated. Install @mermaid-js/mermaid-cli to enable."

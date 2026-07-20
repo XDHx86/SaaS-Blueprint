@@ -82,6 +82,7 @@ for key in COMPOSE_PROJECT_NAME POSTGRES_USER POSTGRES_DB POSTGRES_PASSWORD; do
 done
 
 # Warn (not fail) if a secret is still empty after bootstrap.
+# shellcheck disable=SC2034
 empty_secret=0
 for key in POSTGRES_PASSWORD REDIS_PASSWORD GRAFANA_ADMIN_PASSWORD; do
   if grep -q "^${key}=$" "$ENV_FILE"; then

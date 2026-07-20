@@ -21,7 +21,7 @@ COMPOSE="docker compose -f compose/docker-compose.yml"
 
 [ -f "$ENV_FILE" ] || { echo "no $ENV_FILE found; run 'make bootstrap' first" >&2; exit 1; }
 
-# shellcheck disable=SC1091
+# shellcheck disable=SC1090
 set -a; . ./"$ENV_FILE"; set +a
 
 RETENTION="${BACKUP_RETENTION_DAYS:-7}"
