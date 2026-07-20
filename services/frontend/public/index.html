@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Infrastructure Lab — Status</title>
+  <meta name="description" content="Infrastructure Lab reference architecture — live status board." />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header>
+    <span class="logo" aria-hidden="true">⬡</span>
+    <div class="heading">
+      <span class="title">Infrastructure Lab</span>
+      <span class="sub">reference architecture · status board</span>
+    </div>
+    <span class="badge" id="commit">commit: …</span>
+  </header>
+
+  <main>
+    <section class="card" aria-label="health">
+      <div class="metric" id="liveness">
+        <span class="pill">—</span>
+        <span class="label">Backend liveness · <code>/healthz</code></span>
+      </div>
+      <div class="metric" id="readiness">
+        <span class="pill">—</span>
+        <span class="label">Backend readiness · <code>/readyz</code></span>
+      </div>
+    </section>
+
+    <section class="card" aria-label="status">
+      <h2>Backend status · <code>/api/status</code></h2>
+      <pre id="status">fetching…</pre>
+    </section>
+
+    <p class="flow">
+      request path: <code>browser</code> → <code>Cloudflare</code> → <code>Caddy</code> → <code>backend</code> → <code>PostgreSQL</code> / <code>Redis</code>
+    </p>
+  </main>
+
+  <footer>
+    Reference architecture — read the <code>README</code>, the diagrams in <code>architecture/</code>, and the ADRs in <code>docs/adr/</code> in the repository.
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>

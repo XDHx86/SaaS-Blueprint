@@ -1,0 +1,53 @@
+# ---- Environment & secrets ----
+# Never commit real environment files; commit the template only.
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# ---- Runtime data ----
+# Backup destination is a bind-mounted runtime directory, not source.
+/backups/*
+!/backups/.gitkeep
+
+# Container/persisted data if bind-mounted locally
+/data/
+caddy_data/
+caddy_config/
+grafana_data/
+prometheus_data/
+
+# ---- Logs ----
+*.log
+logs/
+
+# ---- Node ----
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm/
+.pnpm-debug.log*
+
+# ---- Build artifacts ----
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# ---- OS / editors ----
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.swp
+*.swo
+
+# ---- Per-developer compose overrides ----
+docker-compose.*.local.yml
+
+# ---- Mermaid render output (diagrams-as-code: .mmd is the source) ----
+architecture/diagrams/*.svg
+architecture/diagrams/*.png

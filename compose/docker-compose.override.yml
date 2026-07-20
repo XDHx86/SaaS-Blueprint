@@ -1,0 +1,23 @@
+# =============================================================================
+# Infrastructure Lab — local dev override
+# =============================================================================
+# Applied automatically by `docker compose up` (and `make up`) because the
+# filename matches the default override pattern relative to this directory.
+# It adds *only* local development conveniences and must NOT change the
+# service contract (ports, health endpoints, volumes) defined by the base.
+#
+# What this adds:
+#   - read-only source mount of services/backend/src so edits iterate WITHOUT an
+#     image rebuild; restart the container (make restart) to pick up the change.
+#     For live reload, wire `nodemon` or `node --watch` in a per-developer
+#     override (see docs/development/local-development.md), NOT the base.
+#   - LOG_LEVEL=debug
+# =============================================================================
+
+services:
+  backend:
+    environment:
+      LOG_LEVEL: debug
+    volumes:
+      - ../services/backend/src:/app/src:ro
+    command: ["node", "src/server.js"]

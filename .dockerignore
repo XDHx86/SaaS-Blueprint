@@ -1,0 +1,46 @@
+# Root build context filter.
+# (Each service also has its own .dockerignore at services/<svc>/.dockerignore,
+# which takes effect when building from that subdirectory as the context.)
+
+# ---- Version control & metadata ----
+.git
+.gitignore
+.gitattributes
+.github/
+.editorconfig
+
+# ---- Documentation (not needed inside images) ----
+docs/
+architecture/
+SYSTEM_DESIGN.md
+README.md
+CONTRIBUTING.md
+SECURITY.md
+CHANGELOG.md
+LICENSE
+*.md
+
+# ---- Secrets: never bake into an image ----
+.env
+.env.*
+!.env.example
+secrets/
+*.key
+*.pem
+
+# ---- Runtime / local state ----
+backups/
+data/
+caddy_data/
+caddy_config/
+grafana_data/
+prometheus_data/
+node_modules/
+*.log
+
+# ---- OS / editors ----
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

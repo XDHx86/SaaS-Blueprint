@@ -1,0 +1,62 @@
+# =============================================================================
+# Security — container image scan (PLACEHOLDER)
+# =============================================================================
+# Builds each image and runs Trivy against it. This is intentionally a
+# PLACEHOLDER policy: thresholds and severities are illustrative, and outcomes
+# do NOT fail the pipeline (continue-on-error). Before relying on this:
+#   - choose real severity thresholds (CRITICAL/HIGH fail),
+#   - wire findings to the same receiver as Alertmanager (see monitoring/),
+#   - enable SARIF upload to GitHub Security / a vulnerability dashboard.
+# See docs/security/ and ADR-0005.
+#
+# Runs weekly and on manual dispatch.
+#
+# Important Note: Production workflows should pin third-party GitHub Actions to 
+# immutable commit SHAs to reduce supply-chain risk.
+# =============================================================================
+name: Security
+
+on:
+  schedule:
+    - cron: '23 4 * * 1'   # weekly, Monday ~04:23 UTC (off a round minute)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    name: Scan images (placeholder)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: backend
+            context: services/backend
+          - service: frontend
+            context: services/frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build ${{ matrix.service }}
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          push: false
+          load: true
+          tags: infra-lab/${{ matrix.service }}:scan
+
+      # Placeholder scanner. Swapping the action / thresholds is the whole job.
+      - name: Trivy scan (PLACEHOLDER — non-blocking)
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@v0.24.0
+        with:
+          image-ref: infra-lab/${{ matrix.service }}:scan
+          format: table
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
+          exit-code: '0'   # placeholder: do not fail. Set '1' with real thresholds.
+          # results: a real pipeline uploads SARIF and routes CRITICALs. Not done here.

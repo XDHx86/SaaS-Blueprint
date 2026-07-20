@@ -1,0 +1,51 @@
+# =============================================================================
+# Docker — multi-stage build validation (no push)
+# =============================================================================
+# Ensures the backend and frontend Dockerfiles build cleanly with buildx and
+# cache; images are tagged locally and not pushed. Push on release lives in
+# release.yml. Keeps image-size regressions visible via docker image ls.
+# =============================================================================
+name: Docker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'services/**'
+      - 'compose/**'
+      - '.github/workflows/docker.yml'
+  pull_request:
+    paths:
+      - 'services/**'
+      - 'compose/**'
+      - '.github/workflows/docker.yml'
+
+jobs:
+  build:
+    name: Build images
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: backend
+            context: services/backend
+          - service: frontend
+            context: services/frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build ${{ matrix.service }}
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          push: false
+          tags: infra-lab/${{ matrix.service }}:ci
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+          load: true
+
+      - name: Image size
+        run: docker image ls infra-lab/${{ matrix.service }}:ci --format '{{.Repository}}:{{.Tag}} {{.Size}}'

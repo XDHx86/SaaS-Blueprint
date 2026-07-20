@@ -1,0 +1,20 @@
+# =============================================================================
+# Grafana — dashboard provider
+# =============================================================================
+# Tells Grafana to load dashboards from /var/lib/grafana/dashboards (the
+# compose base bind-mounts monitoring/grafana/dashboards there read-only).
+# Dashboards are therefore versioned in this repository, not hand-imported.
+# =============================================================================
+
+apiVersion: 1
+
+providers:
+  - name: infra-lab
+    orgId: 1
+    folder: Infrastructure Lab
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards

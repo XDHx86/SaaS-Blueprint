@@ -1,0 +1,16 @@
+%% Infrastructure Lab — Observability Flow
+%% Pull model: Prometheus scrapes /metrics from each target on an interval.
+%% Recording rules pre-compute SLO indicators; alerts route via Alertmanager.
+%% Render:  mmdc -i observability-flow.mmd -o observability-flow.svg
+flowchart LR
+    classDef tgt  fill:#f3f7ec,stroke:#7ea25a,color:#2b3e16
+    classDef core fill:#f4eafb,stroke:#9a6ad6,color:#45267a
+    classDef out  fill:#fff2e6,stroke:#e69a5a,color:#5a3416
+
+    TGT["Scrape targets<br/>backend · caddy<br/>postgres · redis · node"]:::tgt
+    TGT -->|"/metrics<br/>pull · 15s literal"| Prom["Prometheus<br/>scrape · record · alert"]:::core
+    Prom --> Rec["Recording rules<br/>pre-computed SLOs"]:::core
+    Rec --> Grafana["Grafana<br/>provisioned dashboards"]:::out
+    Rec --> Aler["Alert rules<br/>thresholds on SLOs"]:::core
+    Aler --> AM["Alertmanager<br/>routing · grouping · inhibit"]:::out
+    AM --> Notify["Notifications<br/>(Slack / email placeholder)"]:::out

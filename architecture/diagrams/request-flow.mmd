@@ -1,0 +1,17 @@
+%% Infrastructure Lab — Request Flow
+%% An end-to-end request: edge -> proxy -> app -> data plane.
+%% Render:  mmdc -i request-flow.mmd -o request-flow.svg
+flowchart LR
+    classDef user  fill:#eef0ff,stroke:#6787c7,color:#23345e
+    classDef edge  fill:#eaf4ff,stroke:#5aa0e6,color:#14436f
+    classDef app   fill:#f3f7ec,stroke:#7ea25a,color:#2b3e16
+    classDef data  fill:#fff2e6,stroke:#e69a5a,color:#5a3416
+
+    U(["End User"]):::user -->|HTTPS 443| CF["Cloudflare<br/>edge TLS · WAF"]:::edge
+    CF -->|443| Caddy["Caddy :80/443<br/>routing · headers · gzip"]:::edge
+    Caddy -->|"/" static| FE["Frontend :80<br/>nginx"]:::app
+    Caddy -->|"/api/*"| BE["Backend :8080<br/>Fastify · stateless"]:::app
+    Caddy -. "/readyz off" .-> LB{healthy?}
+    LB -.no.-> Drain["stop sending traffic"]
+    BE -->|5432| PG[("PostgreSQL<br/>primary datastore")]:::data
+    BE -->|6379| RD[("Redis<br/>cache · sessions")]:::data

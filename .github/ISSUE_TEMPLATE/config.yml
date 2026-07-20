@@ -1,0 +1,10 @@
+# Issue template configuration
+# https://docs.github.com/communities/using-templates-to-encourage-useful-issues/configuring-issue-templates-for-your-repository
+blank_issues_enabled: false
+contact_links:
+  - name: Security report (DO NOT open an issue)
+    url: https://github.com/your-org/infrastructure-lab/security/policy
+    about: Report vulnerabilities privately — see SECURITY.md. Public issues are not accepted for security reports.
+  - name: Discussions — questions & ideas
+    url: https://github.com/your-org/infrastructure-lab/discussions
+    about: Ask a question or float a design idea before opening an issue.

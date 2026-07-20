@@ -1,0 +1,142 @@
+# =============================================================================
+# Infrastructure Lab — production overlay
+# =============================================================================
+# Production ASSUMPTIONS layered onto the base stack: pinned registry images,
+# container hardening, replica count, and closed datastores. Values come from
+# the environment (see .env.example "Production overlay" section).
+#
+# Run WITHOUT --build so compose pulls rather than builds:
+#   docker compose --env-file .env -f compose/docker-compose.yml \
+#     -f compose/docker-compose.prod.yml up -d
+#
+# deploy.replicas is honored under plain compose only with --compatibility:
+#   docker compose --compatibility --env-file .env -f compose/docker-compose.yml \
+#     -f compose/docker-compose.prod.yml up -d
+# (See make prod-up, configured to include --compatibility.)
+#
+# All hardening here is the reference implementation of docs/security/.
+# =============================================================================
+
+x-hardening: &hardening
+  read_only: true
+  tmpfs:
+    - "/tmp:noexec,nosuid,nodev"
+  cap_drop:
+    - ALL
+  security_opt:
+    - "no-new-privileges:true"
+
+services:
+  # ---------------------------------------------------------------------------
+  # Application: pull pinned images from the registry; do not build.
+  # ---------------------------------------------------------------------------
+  backend:
+    image: ${REGISTRY}/infra-lab-backend:${IMAGE_TAG}
+    pull_policy: always
+    build: !reset null          # explicit: do not build in prod
+    environment:
+      &prod-backend-env
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      BACKEND_PORT: 8080
+      LOG_LEVEL: warn
+      COMMIT_SHA: ${IMAGE_TAG}
+      SHUTDOWN_TIMEOUT_MS: 15000
+    deploy:
+      replicas: ${BACKEND_REPLICAS:-2}
+      resources:
+        limits:
+          memory: ${BACKEND_MEMORY_LIMIT:-512m}
+          cpus: "${BACKEND_CPU_LIMIT:-0.50}"
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+    <<: *hardening
+    tmpfs:
+      - "/app/tmp:noexec,nosuid,nodev"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/healthz || exit 1"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+
+  frontend:
+    image: ${REGISTRY}/infra-lab-frontend:${IMAGE_TAG}
+    pull_policy: always
+    build: !reset null
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 64m
+          cpus: "0.25"
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+    <<: *hardening
+    # nginx :80 needs CAP_NET_BIND_SERVICE OR a bind <1024 workaround. The
+    # slimmest production approach is to bind 8080 and let Caddy target it.
+    # Keeping :80 here but not dropping NET_BIND_SERVICE would break start.
+    # Reference stance: grant the single capability needed, drop the rest.
+    cap_add:
+      - NET_BIND_SERVICE
+
+  # ---------------------------------------------------------------------------
+  # Edge: never build; the Caddyfile is config, not a build artifact.
+  # ---------------------------------------------------------------------------
+  proxy:
+    <<: *hardening
+    ports:
+      - "80:80"
+      - "443:443"
+      # Admin API stays internal-only in prod (not published).
+    environment:
+      PUBLIC_DOMAIN: ${PUBLIC_DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL}
+
+  # ---------------------------------------------------------------------------
+  # Datastores: NOT published to the host in prod (remove ports entirely).
+  # ---------------------------------------------------------------------------
+  postgres:
+    ports: !reset null
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+          cpus: "1.00"
+      restart_policy:
+        condition: on-failure
+        max_attempts: 5
+
+  redis:
+    ports: !reset null
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+          cpus: "0.50"
+      restart_policy:
+        condition: on-failure
+        max_attempts: 5
+
+  # ---------------------------------------------------------------------------
+  # Observability UIs are NOT published to the host in prod: Grafana,
+  # Prometheus, and Alertmanager are reachable only on the internal compose
+  # network. In real prod, front these with a VPN or an internal-only ingress
+  # route — never a public host port.
+  # ---------------------------------------------------------------------------
+  alertmanager:
+    ports: !reset null
+
+  grafana:
+    ports: !reset null
+
+  prometheus:
+    ports: !reset null

@@ -1,0 +1,61 @@
+# =============================================================================
+# Infrastructure Lab — Alertmanager routing
+# =============================================================================
+# Routes alerts by severity to placeholder receivers. Values are deliberately
+# placeholders: configure your real webhook/email/Slack before relying on this
+# (see docs/operations/monitoring.md and ADR-0006).
+#
+# Reload without restart:  POST http://localhost:9093/-/reload
+# (web.enable-lifecycle is implicit on alertmanager's admin endpoint by
+# default; the compose base does not publish 9093 to the host in prod, so
+# reload locally via `make shell` or a port-forward.)
+# =============================================================================
+
+global:
+  resolve_timeout: 5m
+
+# Receivers are placeholders. Replace webhook_url/email with real endpoints.
+receivers:
+  - name: web-ops
+    webhook_configs:
+      - url: http://127.0.0.1:5001/alert
+        send_resolved: true
+
+  - name: oncall
+    webhook_configs:
+      - url: http://127.0.0.1:5001/alert
+        send_resolved: true
+
+  - name: dead-letter
+    webhook_configs:
+      - url: http://127.0.0.1:5001/alert
+
+route:
+  receiver: dead-letter
+  group_by: ["alertname", "group"]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  routes:
+    - matchers:
+        - severity = "critical"
+      receiver: web-ops
+      group_wait: 10s
+      repeat_interval: 1h
+
+    - matchers:
+        - severity = "warning"
+      receiver: oncall
+
+    - matchers:
+        - severity = "info"
+      receiver: dead-letter
+
+# Suppress downstream alerts once a critical upstream is firing, so a proxy
+# outage doesn't open a ticket per dependent service.
+inhibit_rules:
+  - source_matchers:
+      - severity = "critical"
+    target_matchers:
+      - severity = "warning"
+    equal: ["group"]

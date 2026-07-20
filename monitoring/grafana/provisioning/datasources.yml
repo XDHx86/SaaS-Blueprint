@@ -1,0 +1,21 @@
+# =============================================================================
+# Grafana — provisioned datasource (read-only; dashboards read from here)
+# =============================================================================
+# The compose base mounts monitoring/grafana/provisioning/ at
+# /etc/grafana/provisioning. Grafana applies these on startup — no manual
+# datasource import. See docs/operations/monitoring.md.
+# =============================================================================
+
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    uid: prometheus
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      timeInterval: 15s
+      httpMethod: POST

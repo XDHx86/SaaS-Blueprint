@@ -1,0 +1,71 @@
+# =============================================================================
+# CI — lint + test on push and pull requests
+# =============================================================================
+# Fast, cheap signal that the blueprint stays shippable: shell scripts lint
+# clean, compose validates for every overlay, and the backend test suite
+# passes. Docker-image build lives in docker.yml; release in release.yml.
+# =============================================================================
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint (shellcheck + compose)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: shellcheck
+        run: docker run --rm -v "$PWD:/mnt" koalaman/shellcheck:stable scripts/*.sh
+
+      - name: Prepare .env from template
+        run: cp .env.example .env
+
+      - name: Validate base compose
+        run: docker compose -f compose/docker-compose.yml config -q
+
+      - name: Validate base + local override
+        run: docker compose -f compose/docker-compose.yml -f compose/docker-compose.override.yml config -q
+
+      - name: Validate production overlay
+        run: |
+          env REGISTRY=ghcr.io/example IMAGE_TAG=dev BACKEND_REPLICAS=2 \
+            BACKEND_MEMORY_LIMIT=512m BACKEND_CPU_LIMIT=0.50 \
+            POSTGRES_USER=infra POSTGRES_PASSWORD=ci POSTGRES_DB=appdb \
+            REDIS_PASSWORD=ci GRAFANA_ADMIN_PASSWORD=ci PUBLIC_DOMAIN=:80 \
+            docker compose --compatibility -f compose/docker-compose.yml \
+            -f compose/docker-compose.prod.yml config -q
+
+      - name: Lint diagrams (mmdc)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npx -y @mermaid-js/mermaid-cli@latest -i architecture/diagrams/system-overview.mmd -o /dev/null
+      - run: npx -y @mermaid-js/mermaid-cli@latest -i architecture/diagrams/request-flow.mmd    -o /dev/null
+      - run: npx -y @mermaid-js/mermaid-cli@latest -i architecture/diagrams/cicd-flow.mmd         -o /dev/null
+      - run: npx -y @mermaid-js/mermaid-cli@latest -i architecture/diagrams/observability-flow.mmd -o /dev/null
+
+  test:
+    name: Test (backend)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          # No lockfile is committed in this reference; real use should commit
+          # package-lock.json and switch this to `npm ci`.
+      - run: npm install --no-audit --no-fund
+      - run: npm test

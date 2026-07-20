@@ -1,0 +1,20 @@
+%% Infrastructure Lab — CI/CD Flow
+%% Push/PR:  lint -> test -> build -> scan -> push to registry.
+%% Release:  git tag -> GitHub Release. Deploy pulls a pinned image and is gated.
+%% Render:  mmdc -i cicd-flow.mmd -o cicd-flow.svg
+flowchart TD
+    classDef ok   fill:#eafbf3,stroke:#5acaa0,color:#164533
+    classDef pkg  fill:#eaf4ff,stroke:#5aa0e6,color:#14436f
+    classDef fail fill:#ffe6e6,stroke:#d66a6a,color:#5a1616
+
+    PR["Push / Pull Request"]:::ok --> Lint["Lint<br/>shellcheck · compose config"]:::ok
+    Lint --> Test["Test<br/>backend suite"]:::ok
+    Test --> Build["Build images<br/>multi-stage · non-root"]:::ok
+    Build --> Scan["Security scan<br/>(placeholder)"]:::ok
+    Scan -->|push :sha| REG[("Container Registry")]:::pkg
+    Tag["git tag v#"]:::ok --> Release["Release workflow"]:::ok
+    Release --> Rel["GitHub Release<br/>changelog excerpt"]:::ok
+    REG -->|pull pinned| Deploy["Compose up<br/>prod overlay"]:::ok
+    Deploy --> Gate{"/healthz · /readyz"}
+    Gate -->|pass| Live["Live :80 / :443"]:::ok
+    Gate -->|fail| Hold["Hold / rollback"]:::fail

@@ -1,0 +1,51 @@
+%% Infrastructure Lab — System Overview
+%% Diagrams-as-code: this is the single source of truth for the overview.
+%% Render:  mmdc -i system-overview.mmd -o system-overview.svg
+%% Embedded (rendered inline) in README.md.
+flowchart TD
+    classDef cloud  fill:#eef0ff,stroke:#6787c7,color:#23345e
+    classDef proxy  fill:#eaf4ff,stroke:#5aa0e6,color:#14436f
+    classDef app    fill:#f3f7ec,stroke:#7ea25a,color:#2b3e16
+    classDef data   fill:#fff2e6,stroke:#e69a5a,color:#5a3416
+    classDef obs    fill:#f4eafb,stroke:#9a6ad6,color:#45267a
+    classDef ci     fill:#eafbf3,stroke:#5acaa0,color:#164533
+    classDef store  fill:#fafafa,stroke:#999,color:#333
+
+    User([End User]):::cloud --> CF["Cloudflare<br/>DNS · CDN · WAF · TLS<br/>(edge termination)"]:::cloud
+    CF --> Caddy["Caddy — Reverse Proxy<br/>Automatic TLS · Routing · Headers"]:::proxy
+
+    Caddy -->|"/" static| Frontend["Frontend<br/>nginx · static assets"]:::app
+    Caddy -->|"/api/*"| Backend["Backend API<br/>Node.js / Fastify · stateless"]:::app
+
+    subgraph sg-state ["Stateful Stores"]
+        PG[("PostgreSQL<br/>Primary datastore")]:::data
+        Redis[("Redis<br/>Cache · Sessions")]:::data
+    end
+    Backend --> PG
+    Backend --> Redis
+
+    subgraph sg-persist ["Persistence"]
+        PV[("Persistent Volumes<br/>pgdata · redisdata")]:::store
+    end
+    PG --- PV
+    Redis --- PV
+
+    subgraph sg-obs ["Observability"]
+        Prom["Prometheus<br/>Scrape · Record · Alert"]:::obs
+        Grafana["Grafana<br/>Dashboards"]:::obs
+        AM["Alertmanager<br/>Notifications"]:::obs
+    end
+    Backend -. metrics .-> Prom
+    Caddy -. metrics .-> Prom
+    PG -. exporter .-> Prom
+    Redis -. exporter .-> Prom
+    Prom --> Grafana
+    Prom --> AM
+
+    subgraph sg-deliver ["Delivery"]
+        GHA["GitHub Actions<br/>Lint · Test · Build · Scan · Release"]:::ci
+        REG[(Container Registry)]:::ci
+    end
+    GHA -. "build & push" .-> REG
+    REG -. pull .-> Frontend
+    REG -. pull .-> Backend

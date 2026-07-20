@@ -1,0 +1,259 @@
+# =============================================================================
+# Infrastructure Lab — base / dev stack
+# =============================================================================
+# Runnable single-host reference: proxy → frontend + stateless backend →
+# PostgreSQL + Redis, fully observed by Prometheus/Grafana/Alertmanager.
+#
+# This file is the SHARED BASE. Local conveniences (source mount, debug logging)
+# live in docker-compose.override.yml and apply automatically via `make up`.
+# Production assumptions (hardening, remote images, replicas, closed DB)
+# live in docker-compose.prod.yml and are applied with `make prod-up`.
+#
+# Conventions are locked across the repo — see docs/architecture/environment-variables.md
+# and the README "Locked conventions" before changing any name/port here.
+# =============================================================================
+
+x-backend-env: &backend-env
+  POSTGRES_HOST: postgres
+  POSTGRES_PORT: 5432            # internal port, not the host .env var
+  POSTGRES_USER: ${POSTGRES_USER:-infra}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
+  POSTGRES_DB: ${POSTGRES_DB:-appdb}
+  REDIS_HOST: redis
+  REDIS_PORT: 6379               # internal port
+  REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+  BACKEND_PORT: 8080
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+  COMMIT_SHA: ${COMMIT_SHA:-dev}
+  SHUTDOWN_TIMEOUT_MS: 10000
+
+networks:
+  infra-lab-net:
+    name: infra-lab-net
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+volumes:
+  pgdata:
+    name: infra-lab_pgdata
+  redisdata:
+    name: infra-lab_redisdata
+  grafana-data:
+    name: infra-lab_grafana-data
+  caddy-data:
+    name: infra-lab_caddy-data
+  caddy-config:
+    name: infra-lab_caddy-config
+  prom-data:
+    name: infra-lab_prom-data
+
+services:
+  # ---------------------------------------------------------------------------
+  # Data plane: PostgreSQL (primary) + Redis (cache/sessions)
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-infra}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
+      POSTGRES_DB: ${POSTGRES_DB:-appdb}
+    ports:
+      # Dev convenience: connect a DB client on the host. Prod overlay removes this.
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+    networks: [infra-lab-net]
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:-}", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      # Empty password == no auth set; REDIS_PASSWORD expands at compose time.
+      test: ["CMD-SHELL", "redis-cli $${REDIS_PASSWORD:+-a \"$${REDIS_PASSWORD}\" --no-auth-warning} ping | grep -q PONG"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks: [infra-lab-net]
+    # Not published to the host even in dev — reached only over the compose network.
+    expose: ["6379"]
+
+  # ---------------------------------------------------------------------------
+  # Application plane: backend (stateless) + frontend (static)
+  # Images are built from source in dev; the prod overlay replaces `image`
+  # with a registry path and `pull_policy: always` (run WITHOUT --build).
+  # ---------------------------------------------------------------------------
+  backend:
+    image: infra-lab/backend:dev
+    build:
+      context: ../services/backend
+    restart: unless-stopped
+    environment: *backend-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/healthz || exit 1"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    expose: ["8080"]
+    networks: [infra-lab-net]
+
+  frontend:
+    image: infra-lab/frontend:dev
+    build:
+      context: ../services/frontend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    expose: ["80"]
+    networks: [infra-lab-net]
+
+  # ---------------------------------------------------------------------------
+  # Edge: Caddy reverse proxy (automatic TLS, routing, header policy)
+  # ---------------------------------------------------------------------------
+  proxy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    environment:
+      PUBLIC_DOMAIN: ${PUBLIC_DOMAIN:-:80}
+      ACME_EMAIL: ${ACME_EMAIL:-ops@example.com}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    healthcheck:
+      # Admin API on :2019 (/health returns 200 when up).
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:2019/config/"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+    networks: [infra-lab-net]
+
+  # ---------------------------------------------------------------------------
+  # Observability: Prometheus (scrape/record/alert) + exporters
+  # ---------------------------------------------------------------------------
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=${PROM_RETENTION:-15d}"
+      - "--web.enable-lifecycle"
+    ports:
+      - "9090:9090"
+    volumes:
+      - ../monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../monitoring/rules:/etc/prometheus/rules:ro
+      - ../monitoring/alertmanager/alertmanager.yml:/etc/prometheus/alertmanager.yml:ro
+      - prom-data:/prometheus
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9090/-/healthy"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+    networks: [infra-lab-net]
+
+  postgres-exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:latest
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER:-infra}:${POSTGRES_PASSWORD:-}@postgres:5432/${POSTGRES_DB:-appdb}?sslmode=disable"
+    expose: ["9187"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [infra-lab-net]
+
+  redis-exporter:
+    image: quay.io/prometheuscommunity/redis-exporter:latest
+    restart: unless-stopped
+    environment:
+      REDIS_ADDR: "redis://redis:6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+    expose: ["9121"]
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks: [infra-lab-net]
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    restart: unless-stopped
+    pid: host
+    command:
+      - "--path.rootfs=/host"
+    volumes:
+      - "/:/host:ro,rslave"
+      - "/proc:/host/proc:ro"
+      - "/sys:/host/sys:ro"
+    expose: ["9100"]
+    networks: [infra-lab-net]
+
+  # ---------------------------------------------------------------------------
+  # Observability: Alertmanager (routing/grouping) + Grafana (dashboards)
+  # ---------------------------------------------------------------------------
+  alertmanager:
+    image: prom/alertmanager:latest
+    restart: unless-stopped
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--storage.path=/alertmanager"
+    ports:
+      - "9093:9093"
+    volumes:
+      - ../monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    expose: ["9093"]
+    networks: [infra-lab-net]
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_ROOT_URL: "http://localhost:3000/"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    networks: [infra-lab-net]

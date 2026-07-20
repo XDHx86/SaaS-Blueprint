@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c ' *)",
+      "Bash(grep -a -i \"reconcil\" \"C:/Users/karee/.claude/projects/d--Projos-Infrastructure-Lab/62ea28a7-0553-44a9-9c10-c572afca4172.jsonl\" 2>/dev/null | head -c 8000)",
+      "Read(//c/Users/karee/.claude/projects/d--Projos-Infrastructure-Lab/**)",
+      "Bash(awk 'END{print NR}' \"C:/Users/karee/.claude/projects/d--Projos-Infrastructure-Lab/62ea28a7-0553-44a9-9c10-c572afca4172.jsonl\")",
+      "Bash(sort -k6)",
+      "Bash(python3 -)",
+      "Bash(python3 /tmp/check_links.py)",
+      "Bash(python3 .claude/_check_anchors.py)"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+root = true
+
+# EditorConfig helps maintain consistent formatting across editors and IDEs.
+# https://editorconfig.org
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+# Shell scripts use a wider indent for readability of conditionals
+[*.{sh,bash}]
+indent_size = 4
+
+# Makefiles require real tabs for recipe lines
+[Makefile]
+indent_style = tab
+
+# Markdown: preserve trailing two-space hard line breaks; don't hard-wrap
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = off
+
+# Mermaid diagrams-as-code
+[*.mmd]
+max_line_length = off

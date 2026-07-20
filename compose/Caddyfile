@@ -1,0 +1,35 @@
+# =============================================================================
+# Infrastructure Lab — Caddy reverse proxy
+# =============================================================================
+# Admin API on :2019 (all interfaces) so Prometheus can scrape /metrics.
+# Automatic TLS is enabled when PUBLIC_DOMAIN is a real hostname; in dev it is
+# ":80", so Caddy serves plain HTTP and localhost works without DNS.
+#
+# Rate limiting is intentionally NOT configured here. It belongs at the edge
+# (Cloudflare WAF): enforcing it at the origin still lets a malicious client
+# saturate the connection and wastes origin resources under load.
+# =============================================================================
+
+{
+    admin :2019
+}
+
+{$PUBLIC_DOMAIN} {
+    encode gzip zstd
+
+    # /api/* → stateless backend; everything else → static frontend.
+    handle /api/* {
+        reverse_proxy backend:8080
+    }
+
+    handle {
+        reverse_proxy frontend:80
+    }
+
+    header {
+        Strict-Transport-Security "max-age=31536000"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "no-referrer-when-downgrade"
+    }
+}

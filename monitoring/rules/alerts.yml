@@ -1,0 +1,103 @@
+# =============================================================================
+# Infrastructure Lab — Prometheus rules
+# =============================================================================
+# Two rule types: RECORDING (pre-compute SLO indicators) and ALERTING
+# (thresholds on those indicators). Namespaced infra_lab_* to stay legible
+# across a future federated view.
+# =============================================================================
+
+groups:
+  - name: infra_lab_recording.rules
+    interval: 30s
+    rules:
+      # Pre-compute request rate per service so dashboards and alerts read a
+      # single, cheap series rather than computing across a window each time.
+      - record: job:backend_requests:rate5m
+        expr: rate(infra_lab_backend_requests_total[5m])
+
+      - record: job:backend_uptime_seconds:max
+        expr: max(infra_lab_backend_uptime_seconds)
+
+      - record: host:memory_used:ratio
+        expr: 1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)
+
+      - record: host:disk_used:ratio
+        expr: |
+          1 - (
+            node_filesystem_avail_bytes{mountpoint="/",fstype!~"tmpfs|overlay"} /
+            node_filesystem_size_bytes{mountpoint="/",fstype!~"tmpfs|overlay"}
+          )
+
+  - name: infra_lab_alerts.rules
+    interval: 30s
+    rules:
+      # Always-firing sentinel that proves the whole alerting pipeline works
+      # end-to-end (prometheus → alertmanager → receiver). If this stops
+      # firing somewhere it should, the pipeline is broken.
+      - alert: Watchdog
+        expr: vector(1)
+        labels:
+          severity: info
+        annotations:
+          summary: "Alerting pipeline is working"
+          description: "Sentinel alert that should always fire."
+
+      - alert: BackendDown
+        expr: up{job="backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          group: app
+        annotations:
+          summary: "Backend is down ({{ $labels.instance }})"
+          description: "{{ $labels.instance }} has been unreachable for 1m."
+
+      - alert: ProxyDown
+        expr: up{job="proxy"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          group: edge
+        annotations:
+          summary: "Reverse proxy (Caddy) is down"
+          description: "Caddy admin endpoint unreachable for 1m."
+
+      - alert: PostgresDown
+        expr: up{job="postgres-exporter"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          group: data
+        annotations:
+          summary: "PostgreSQL exporter down"
+          description: "postgres-exporter unreachable — DB may be down or exporter failed."
+
+      - alert: RedisDown
+        expr: up{job="redis-exporter"} == 0
+        for: 2m
+        labels:
+          severity: warning
+          group: data
+        annotations:
+          summary: "Redis exporter down"
+          description: "redis-exporter unreachable for 2m; app degrades read paths to DB."
+
+      - alert: HighHostMemory
+        expr: host:memory_used:ratio > 0.90
+        for: 5m
+        labels:
+          severity: warning
+          group: host
+        annotations:
+          summary: "Host memory >90% for 5m"
+          description: "Memory pressure on infra-lab host; consider scaling up or killing a runaway service."
+
+      - alert: DiskAlmostFull
+        expr: host:disk_used:ratio > 0.90
+        for: 10m
+        labels:
+          severity: critical
+          group: host
+        annotations:
+          summary: "Root filesystem >90% full for 10m"
+          description: "Potential pgdata/volume exhaustion — run backup/restore rotation and investigate."
