@@ -87,6 +87,7 @@ empty_secret=0
 for key in POSTGRES_PASSWORD REDIS_PASSWORD GRAFANA_ADMIN_PASSWORD; do
   if grep -q "^${key}=$" "$ENV_FILE"; then
     echo "  warn: $key is empty — datastores will run without auth" >&2
+    # shellcheck disable=SC2034
     empty_secret=1
   fi
 done
