@@ -1,9 +1,9 @@
 # Infrastructure Lab
 ![CI](https://github.com/XDHx86/SaaS-Blueprint/actions/workflows/ci.yml/badge.svg)
+<!-- ![CodeQL](https://github.com/XDHx86/SaaS-Blueprint/actions/workflows/codeql.yml/badge.svg) -->
 ![Release](https://img.shields.io/github/v/release/XDHx86/SaaS-Blueprint)
 ![License](https://img.shields.io/github/license/XDHx86/SaaS-Blueprint)
 ![Issues](https://img.shields.io/github/issues/XDHx86/SaaS-Blueprint)
-
 ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
 ![Compose](https://img.shields.io/badge/Compose-2496ED?logo=docker&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
