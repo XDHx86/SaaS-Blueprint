@@ -44,16 +44,25 @@ jobs:
             REDIS_PASSWORD=ci GRAFANA_ADMIN_PASSWORD=ci PUBLIC_DOMAIN=:80 \
             docker compose --compatibility -f compose/docker-compose.yml \
             -f compose/docker-compose.prod.yml config -q
-
-      - name: Lint diagrams (mmdc)
+            
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: npx -y @mermaid-js/mermaid-cli@latest -i architecture/diagrams/system-overview.mmd -o /dev/null
-      - run: npx -y @mermaid-js/mermaid-cli@latest -i architecture/diagrams/request-flow.mmd    -o /dev/null
-      - run: npx -y @mermaid-js/mermaid-cli@latest -i architecture/diagrams/cicd-flow.mmd         -o /dev/null
-      - run: npx -y @mermaid-js/mermaid-cli@latest -i architecture/diagrams/observability-flow.mmd -o /dev/null
 
+      - name: Validate Mermaid diagrams
+        run: |
+          set -eu
+
+          for diagram in architecture/diagrams/*.mmd; do
+            echo "Validating $diagram..."
+
+            output="$(mktemp --suffix=.svg)"
+            npx -y @mermaid-js/mermaid-cli@latest \
+              -i "$diagram" \
+              -o "$output"
+            rm -f "$output"
+          done
   test:
     name: Test (backend)
     runs-on: ubuntu-latest
