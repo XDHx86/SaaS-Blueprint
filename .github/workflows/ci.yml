@@ -24,11 +24,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: shellcheck
-        run: docker run --rm -v "$PWD:/mnt" koalaman/shellcheck:stable scripts/*.sh
-
       - name: Prepare .env from template
         run: cp .env.example .env
+
+      - name: shellcheck
+        run: docker run --rm -v "$PWD:/mnt" koalaman/shellcheck:stable scripts/*.sh
 
       - name: Validate base compose
         run: docker compose -f compose/docker-compose.yml config -q
