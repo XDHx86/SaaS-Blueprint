@@ -39,11 +39,10 @@ out/
 .DS_Store
 Thumbs.db
 .idea/
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
+.vscode/
 *.swp
 *.swo
+.claude/
 
 # ---- Per-developer compose overrides ----
 docker-compose.*.local.yml

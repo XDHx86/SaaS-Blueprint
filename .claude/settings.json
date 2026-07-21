@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(python .claude/_check_links.py)",
-      "Bash(python .claude/_check_anchors.py)"
-    ]
-  }
-}
