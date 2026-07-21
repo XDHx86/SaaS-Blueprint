@@ -252,7 +252,7 @@ infrastructure-lab/
 │   └── backend/           # Fastify health API (Dockerfile + src/ + test/)
 ├── monitoring/            # Prometheus, rules, Alertmanager, Grafana provisioning
 ├── scripts/               # bootstrap, backup, restore, healthcheck, lint
-├── .github/workflows/     # ci, docker, security, release
+├── .github/workflows/     # ci, docker, security, codeql, release
 └── docs/
     ├── architecture/  operations/  security/  scaling/  development/
     └── adr/           # 0001 → 0008
@@ -269,7 +269,7 @@ See [docs/](docs/) for the full, structured reading order.
 ## Security philosophy
 
 - **Edge TLS by default.** Cloudflare terminates TLS at the edge; Caddy terminates the hop to the origin with automatic certificates.
-- **Least privilege by construction.** In the prod overlay, containers are `read_only`, drop all capabilities, forbid privilege escalation, run as a non-root user, and expose the minimum surface. Postgres and Redis are not published to the host. See [docs/security/](docs/security/).
+- **Least privilege by construction.** In the prod overlay, the application and edge containers are `read_only`, drop all capabilities, forbid privilege escalation, run as a non-root user, and expose the minimum surface. Datastores and the observability stack are excluded where hardening conflicts with their requirements (the Postgres/Redis images start as root to init the volume, then drop privileges via `setuid` — so `cap_drop: [ALL]` would break them). Postgres and Redis are not published to the host. See [docs/security/](docs/security/).
 - **Secrets out of the image.** Configuration comes from the environment (`.env`), never baked into images; the upgrade path to SOPS/Vault is documented. See [docs/security/secrets-management.md](docs/security/secrets-management.md).
 
 ## Observability philosophy
@@ -331,6 +331,7 @@ Full path: [docs/getting-started.md](docs/getting-started.md).
 - [x] Observability: Prometheus, Grafana, Alertmanager, provisioned dashboards
 - [x] Operations: backup/restore scripts, composite healthcheck
 - [x] CI/CD: lint, test, build, security scan (placeholder), release
+- [x] Supply-chain: CodeQL SAST + Dependabot (GitHub Actions, npm, Docker base images)
 - [x] ADRs 0001–0008
 - [ ] CI scan wired to a real scanner image (Trivy/Grype)
 - [ ] Runbook: alert → diagnostic trees
@@ -340,5 +341,6 @@ Full path: [docs/getting-started.md](docs/getting-started.md).
 ## Contributing / License / Security
 
 - Contributing: [CONTRIBUTING.md](CONTRIBUTING.md)
+- Code of conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
 - License: [LICENSE](LICENSE) (MIT)
 - Security policy & reporting: [SECURITY.md](SECURITY.md)

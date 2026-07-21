@@ -17,6 +17,13 @@ The reference implementation in [`compose/docker-compose.prod.yml`](../../compos
 | single `cap_add` (frontend: `NET_BIND_SERVICE`) | the **one** capability nginx needs to bind :80 — drop all, then add back the minimum |
 | `pull_policy: always` + pinned tag | prod runs the scanned, immutable image, not a locally-built guess |
 
+These controls are applied to the **application and edge plane** (`backend`, `frontend`, `proxy`) — images that run as a non-root user from the first process and need no privileged syscall. Two categories are intentionally **excluded**:
+
+- **Datastores** (`postgres`, `redis`) — the upstream images start as `root` to initialize the data volume, then drop to the `postgres`/`redis` user via `gosu`/`su-exec` (a `setuid` syscall). That drop needs `CAP_SETUID`/`CAP_SETGID`, so `cap_drop: [ALL]` would break first-time volume initialization. They also write to their data volume, so `read_only` would break them too. Their host ports are closed in prod (see [network-security.md](network-security.md)); the missing caps are a property of the upstream image's startup, not a gap in the posture.
+- **Observability** (`prometheus`, `grafana`, `alertmanager`, exporters) — most write state to volumes (TSDB, Grafana DB), and `node-exporter` needs `pid: host` and host rootfs mounts to gather host metrics, so a blanket `read_only` + `cap_drop` does not fit.
+
+The rung above removes the constraint: on a scheduler with init containers, or with distroless images that run non-root from the start, the datastores' root entrypoint disappears and the full hardening set applies.
+
 ## Drop all, then add back the minimum
 
 The single most important principle: **`cap_drop: [ALL]`** is the default, and capabilities are added back **one at a time** as the only acceptable reason. nginx binding :80 is the worked example — it gets `NET_BIND_SERVICE` and nothing else. If a future service needs a cap, the PR that adds it must justify it in the same place; "drop all, hope for the best" is the failure mode this avoids.

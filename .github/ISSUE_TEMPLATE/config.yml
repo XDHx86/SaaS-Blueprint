@@ -1,10 +1,14 @@
 # Issue template configuration
 # https://docs.github.com/communities/using-templates-to-encourage-useful-issues/configuring-issue-templates-for-your-repository
+#
+# Contact links surface when a contributor opens "New issue". URLs point at
+# this repository; fork-and-adopt blueprints must update both URLs, and enable
+# Discussions in repository settings for the questions link to resolve.
 blank_issues_enabled: false
 contact_links:
   - name: Security report (DO NOT open an issue)
-    url: https://github.com/your-org/infrastructure-lab/security/policy
+    url: https://github.com/XDHx86/SaaS-Blueprint/security/policy
     about: Report vulnerabilities privately — see SECURITY.md. Public issues are not accepted for security reports.
   - name: Discussions — questions & ideas
-    url: https://github.com/your-org/infrastructure-lab/discussions
+    url: https://github.com/XDHx86/SaaS-Blueprint/discussions
     about: Ask a question or float a design idea before opening an issue.

@@ -1,0 +1,53 @@
+# =============================================================================
+# Dependabot — weekly dependency updates
+# =============================================================================
+# Opens weekly pull requests for the three ecosystems this repository uses:
+# GitHub Actions, npm (the backend), and Docker (base image tags referenced by
+# the two Dockerfiles). Updates are grouped per ecosystem to keep PR noise low,
+# and commit messages follow the repo's Conventional Commits convention
+# (chore(deps): ...).
+#
+# Tune the schedule, open-pull-requests-limit, and groups when adopting this
+# blueprint. Dependabot also keeps SHA-pinned GitHub Actions up to date if/when
+# this repo moves to immutable-commit pinning (see security.yml).
+# =============================================================================
+version: 2
+
+updates:
+  # GitHub Actions used across .github/workflows/
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      github-actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: "chore(deps)"
+
+  # Node dependencies for the backend reference service
+  - package-ecosystem: "npm"
+    directory: "/services/backend"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      npm:
+        patterns: ["*"]
+    commit-message:
+      prefix: "chore(deps)"
+      # Used only if devDependencies are ever committed.
+      prefix-development: "chore(deps-dev)"
+
+  # Dockerfile base image tags (services/backend + services/frontend)
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      docker:
+        patterns: ["*"]
+    commit-message:
+      prefix: "chore(deps)"

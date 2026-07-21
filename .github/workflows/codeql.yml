@@ -1,0 +1,66 @@
+# =============================================================================
+# CodeQL — semantic code analysis (SAST)
+# =============================================================================
+# Scans the JavaScript/TypeScript in this repository (the Fastify backend,
+# the frontend status board, and the Node test suite) for security
+# weaknesses via GitHub's CodeQL. This complements security.yml, which
+# scans container *images* with Trivy: CodeQL reasons over source, Trivy
+# reasons over images.
+#
+# Runs on push / pull request to main, plus weekly on a schedule. Like
+# security.yml, the cron lands on an off-round minute to spread load. View
+# results under the repository "Security ▸ Code scanning alerts" tab.
+#
+# Important Note: Production workflows should pin third-party GitHub Actions
+# to immutable commit SHAs to reduce supply-chain risk (see security.yml).
+# Dependabot (.github/dependabot.yml) keeps these action versions current.
+# =============================================================================
+name: "CodeQL"
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Weekly, Monday ~04:33 UTC — offset from security.yml (04:23) so the
+    # two scheduled scans do not land on the runner at the same minute.
+    - cron: '33 4 * * 1'
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # The shipped product code is JavaScript (Stateless backend +
+          # frontend). Add a language here to extend coverage (e.g.
+          # `actions` to lint the workflow files themselves).
+          - language: javascript-typescript
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          # Default suites are security-extended + help. For additional
+          # maintainability checks, uncomment the line below.
+          # queries: security-extended,security-and-quality
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"

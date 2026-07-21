@@ -2,6 +2,8 @@
 
 Thanks for considering a contribution. Infrastructure Lab is a **reference architecture**, so contributions should improve the blueprint's *clarity*, *correctness*, or *coverage* — not add product features.
 
+By participating you agree to uphold the [Code of Conduct](CODE_OF_CONDUCT.md).
+
 ## Scope
 
 **In scope:**

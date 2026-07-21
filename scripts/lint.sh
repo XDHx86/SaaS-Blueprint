@@ -17,7 +17,7 @@ fail=0
 
 echo "== shellcheck =="
 if command -v shellcheck >/dev/null 2>&1; then
-  shellcheck scripts/*.sh compose/*.yml 2>/dev/null || fail=1
+  shellcheck scripts/*.sh 2>/dev/null || fail=1
 else
   echo "  shellcheck not installed; skipping. Install for full coverage."
 fi

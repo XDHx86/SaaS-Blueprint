@@ -9,7 +9,9 @@ For the release process, see [docs/development/release-strategy.md](docs/develop
 ## [Unreleased]
 
 ### Added
-- _Nothing yet._
+- `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1) for community health, linked from the README and `CONTRIBUTING.md`.
+- `.github/workflows/codeql.yml` — CodeQL SAST analysis for the JavaScript/TypeScript service code, complementing the Trivy image scan in `security.yml`.
+- `.github/dependabot.yml` — weekly updates for GitHub Actions, npm, and Docker base-image tags, with Conventional Commit prefixes and per-ecosystem grouping.
 
 ### Changed
 - `make prod-up` and `make prod-config` now pass `--compatibility`, so `deploy.replicas` is honored when bringing up the prod overlay (matches `make lint`, the prod overlay comment, and the env-var reference). Previously replicas were silently ignored.
@@ -18,6 +20,9 @@ For the release process, see [docs/development/release-strategy.md](docs/develop
 - Diagrams corrected for honesty: Caddy's role reads "headers" rather than "rate limit"/"Limits" (rate limiting is an edge concern; the `Caddyfile` sets security headers), and the observability flow no longer references the nonexistent `PROM_SCRAPE_INTERVAL` (the scrape interval is the literal `15s` in `prometheus.yml`).
 - Production overlay comment clarifying that Grafana, Prometheus, and Alertmanager are not published to the host in prod (rewritten; the previous text was self-contradictory).
 - Local override and related docs no longer claim "hot reload" — the dev loop is a source mount plus `make restart`; nodemon/`node --watch` is a documented per-developer add-on.
+- Issue template `config.yml` contact links now point at the real repository; the `your-org/infrastructure-lab` placeholders 404'd for this repo.
+- `scripts/lint.sh` no longer passes `compose/*.yml` to shellcheck (YAML is not shell; CI already lints only `scripts/*.sh`), keeping local `make lint` aligned with CI.
+- README security-philosophy line scopes hardening to the application and edge containers (datastores and observability are excluded where hardening conflicts with their requirements), matching the production overlay and `docs/security/container-security.md`.
 
 ### Removed
 
