@@ -29,26 +29,26 @@ bootstrap: ## Generate strong secrets into .env + preflight checks
 # --- Lifecycle (dev) ---------------------------------------------------------
 .PHONY: up
 up: ## Build and start the dev stack (base + local override)
-	$(COMPOSE) $(DEV_FILES) up -d --build
+	$(COMPOSE) --env-file $(ENV) $(DEV_FILES) up -d --build
 
 .PHONY: down
 down: ## Stop and remove dev containers
-	$(COMPOSE) $(DEV_FILES) down
+	$(COMPOSE) --env-file $(ENV) $(DEV_FILES) down
 
 .PHONY: restart
 restart: down up ## Restart the dev stack
 
 .PHONY: logs
 logs: ## Tail logs (Ctrl-C to exit)
-	$(COMPOSE) $(DEV_FILES) logs -f --tail=200
+	$(COMPOSE) --env-file $(ENV) $(DEV_FILES) logs -f --tail=200
 
 .PHONY: ps
 ps: ## Show service status (expect `(healthy)`)
-	$(COMPOSE) $(DEV_FILES) ps
+	$(COMPOSE) --env-file $(ENV) $(DEV_FILES) ps
 
 .PHONY: shell
 shell: ## Shell into the backend container
-	$(COMPOSE) $(DEV_FILES) exec backend sh || $(COMPOSE) $(DEV_FILES) run --rm backend sh
+	$(COMPOSE) --env-file $(ENV) $(DEV_FILES) exec backend sh || $(COMPOSE) --env-file $(ENV) $(DEV_FILES) run --rm backend sh
 
 # --- Quality -----------------------------------------------------------------
 .PHONY: lint
@@ -57,7 +57,7 @@ lint: ## Lint shell scripts and validate compose configs
 
 .PHONY: test
 test: ## Run the backend test suite in a throwaway container
-	$(COMPOSE) $(DEV_FILES) run --rm backend npm test
+	$(COMPOSE) --env-file $(ENV) $(DEV_FILES) run --rm backend npm test
 
 # --- Operations --------------------------------------------------------------
 .PHONY: backup
@@ -76,17 +76,17 @@ health: ## Run the composite healthcheck against the stack
 # --- Production overlay -------------------------------------------------------
 .PHONY: prod-up
 prod-up: ## Bring up the hardened production overlay (replicas honored via --compatibility)
-	$(COMPOSE) --compatibility --env-file $(ENV) $(PROD_FILES) up -d
+	$(COMPOSE) --env-file $(ENV) --compatibility --env-file $(ENV) $(PROD_FILES) up -d
 
 .PHONY: prod-config
 prod-config: ## Render the fully-resolved production compose config (replicas honored via --compatibility)
-	$(COMPOSE) --compatibility --env-file $(ENV) $(PROD_FILES) config
+	$(COMPOSE) --env-file $(ENV) --compatibility --env-file $(ENV) $(PROD_FILES) config
 
 # --- Teardown -----------------------------------------------------------------
 .PHONY: clean
 clean: ## Remove containers/networks (keeps named volumes/data)
-	$(COMPOSE) $(DEV_FILES) down --remove-orphans
+	$(COMPOSE) --env-file $(ENV) $(DEV_FILES) down --remove-orphans
 
 .PHONY: nuke
 nuke: ## DESTRUCTIVE: remove containers, networks, AND named volumes
-	$(COMPOSE) $(DEV_FILES) down -v --remove-orphans
+	$(COMPOSE) --env-file $(ENV) $(DEV_FILES) down -v --remove-orphans
