@@ -61,7 +61,7 @@ if [ -d services/backend/node_modules ]; then
 
     if (
       cd services/backend
-      npx --no-install mmdc -i "../../$f" -o "../../$output" > /dev/null 2>&1
+      npx --no-install mmdc -i "../../$f" -o "../../$output"
     ); then
       printf '  \033[32mPASS\033[0m  %s\n' "$f"
     else
