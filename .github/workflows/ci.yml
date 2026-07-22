@@ -27,12 +27,9 @@ jobs:
       - name: Bootstrap environment
         run: bash ./scripts/bootstrap.sh
         
-      - name: Debug env location
+      - name: Debug compose env
         run: |
-          pwd
-          ls -la
-          ls -la .env
-          grep -E '^(POSTGRES_PASSWORD|REDIS_PASSWORD)=' .env
+          docker compose --env-file .env -f compose/docker-compose.yml config --environment | grep -E 'POSTGRES|REDIS'
 
       - name: shellcheck
         run: docker run --rm -v "$PWD:/mnt" koalaman/shellcheck:stable scripts/*.sh
