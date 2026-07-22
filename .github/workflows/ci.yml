@@ -37,15 +37,13 @@ jobs:
         run: docker compose --env-file .env -f compose/docker-compose.yml -f compose/docker-compose.override.yml config -q
 
       - name: Validate production overlay
-        run: docker compose --compatibility --env-file .env -f compose/docker-compose.yml \
-            -f compose/docker-compose.prod.yml config -q
+        run: docker compose --compatibility --env-file .env -f compose/docker-compose.yml -f compose/docker-compose.prod.yml config -q
             
       - name: Validate base + override + windows (dev on Windows)
         run: docker compose --env-file .env -f compose/docker-compose.yml -f compose/docker-compose.override.yml -f compose/docker-compose.windows.yml config -q
 
       - name: Validate production overlay + windows
-        run: docker compose --compatibility --env-file .env -f compose/docker-compose.yml \
-            -f compose/docker-compose.prod.yml -f compose/docker-compose.windows.yml config -q
+        run: docker compose --compatibility --env-file .env -f compose/docker-compose.yml -f compose/docker-compose.prod.yml -f compose/docker-compose.windows.yml config -q
 
       - name: Set up Node.js
         uses: actions/setup-node@v7
