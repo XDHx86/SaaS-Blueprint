@@ -26,11 +26,13 @@ jobs:
 
       - name: Bootstrap environment
         run: bash ./scripts/bootstrap.sh
-
-      - name: Check generated env
+        
+      - name: Debug env location
         run: |
+          pwd
+          ls -la
           ls -la .env
-          grep REDIS_PASSWORD .env || true
+          grep -E '^(POSTGRES_PASSWORD|REDIS_PASSWORD)=' .env
 
       - name: shellcheck
         run: docker run --rm -v "$PWD:/mnt" koalaman/shellcheck:stable scripts/*.sh
