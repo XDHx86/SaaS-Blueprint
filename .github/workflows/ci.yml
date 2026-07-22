@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Bootstrap environment
-        run: ./scripts/bootstrap.sh
+        run: bash ./scripts/bootstrap.sh
 
       - name: shellcheck
         run: docker run --rm -v "$PWD:/mnt" koalaman/shellcheck:stable scripts/*.sh
