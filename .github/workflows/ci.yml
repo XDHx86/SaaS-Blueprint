@@ -24,8 +24,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Prepare .env from template
-        run: cp .env.example .env
+      - name: Bootstrap environment
+        run: ./scripts/bootstrap.sh
 
       - name: shellcheck
         run: docker run --rm -v "$PWD:/mnt" koalaman/shellcheck:stable scripts/*.sh
