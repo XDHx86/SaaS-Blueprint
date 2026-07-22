@@ -26,48 +26,18 @@ jobs:
 
       - name: Bootstrap environment
         run: bash ./scripts/bootstrap.sh
-        
-      - name: shellcheck
-        run: docker run --rm -v "$PWD:/mnt" koalaman/shellcheck:stable scripts/*.sh
 
-      - name: Validate base compose
-        run: docker compose --env-file .env -f compose/docker-compose.yml config -q
-
-      - name: Validate base + local override
-        run: docker compose --env-file .env -f compose/docker-compose.yml -f compose/docker-compose.override.yml config -q
-
-      - name: Validate production overlay
-        run: docker compose --compatibility --env-file .env -f compose/docker-compose.yml -f compose/docker-compose.prod.yml config -q
-            
-      - name: Validate base + override + windows (dev on Windows)
-        run: docker compose --env-file .env -f compose/docker-compose.yml -f compose/docker-compose.override.yml -f compose/docker-compose.windows.yml config -q
-
-      - name: Validate production overlay + windows
-        run: docker compose --compatibility --env-file .env -f compose/docker-compose.yml -f compose/docker-compose.prod.yml -f compose/docker-compose.windows.yml config -q
-
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
           node-version: '20'
 
-      - name: Validate Mermaid diagrams
-        run: |
-          set -eu
+      - name: Install backend dependencies
+        run: npm install --no-audit --no-fund
+        working-directory: services/backend
 
-          for diagram in architecture/diagrams/*.mmd; do
-            echo "Validating $diagram..."
-
-            output="$(mktemp --suffix=.svg)"
-            trap 'rm -f "$output"' EXIT
-
-            npx -y @mermaid-js/mermaid-cli@latest \
-              -p puppeteer-config.json \
-              -i "$diagram" \
-              -o "$output"
-
-            rm -f "$output"
-            trap - EXIT
-          done
+      - name: Lint
+        run: bash ./scripts/lint.sh
   test:
     name: Test (backend)
     runs-on: ubuntu-latest
