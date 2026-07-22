@@ -27,38 +27,24 @@ jobs:
       - name: Bootstrap environment
         run: bash ./scripts/bootstrap.sh
         
-      - name: Debug compose env
-        run: |
-          docker compose --env-file .env -f compose/docker-compose.yml config --environment | grep -E 'POSTGRES|REDIS'
-
       - name: shellcheck
         run: docker run --rm -v "$PWD:/mnt" koalaman/shellcheck:stable scripts/*.sh
 
       - name: Validate base compose
-        run: docker compose -f compose/docker-compose.yml config -q
+        run: docker compose --env-file .env -f compose/docker-compose.yml config -q
 
       - name: Validate base + local override
-        run: docker compose -f compose/docker-compose.yml -f compose/docker-compose.override.yml config -q
+        run: docker compose --env-file .env -f compose/docker-compose.yml -f compose/docker-compose.override.yml config -q
 
       - name: Validate production overlay
-        run: |
-          env REGISTRY=ghcr.io/example IMAGE_TAG=dev BACKEND_REPLICAS=2 \
-            BACKEND_MEMORY_LIMIT=512m BACKEND_CPU_LIMIT=0.50 \
-            POSTGRES_USER=infra POSTGRES_PASSWORD=ci POSTGRES_DB=appdb \
-            REDIS_PASSWORD=ci GRAFANA_ADMIN_PASSWORD=ci PUBLIC_DOMAIN=:80 \
-            docker compose --compatibility -f compose/docker-compose.yml \
+        run: docker compose --compatibility --env-file .env -f compose/docker-compose.yml \
             -f compose/docker-compose.prod.yml config -q
             
       - name: Validate base + override + windows (dev on Windows)
-        run: docker compose -f compose/docker-compose.yml -f compose/docker-compose.override.yml -f compose/docker-compose.windows.yml config -q
+        run: docker compose --env-file .env -f compose/docker-compose.yml -f compose/docker-compose.override.yml -f compose/docker-compose.windows.yml config -q
 
       - name: Validate production overlay + windows
-        run: |
-          env REGISTRY=ghcr.io/example IMAGE_TAG=dev BACKEND_REPLICAS=2 \
-            BACKEND_MEMORY_LIMIT=512m BACKEND_CPU_LIMIT=0.50 \
-            POSTGRES_USER=infra POSTGRES_PASSWORD=ci POSTGRES_DB=appdb \
-            REDIS_PASSWORD=ci GRAFANA_ADMIN_PASSWORD=ci PUBLIC_DOMAIN=:80 \
-            docker compose --compatibility -f compose/docker-compose.yml \
+        run: docker compose --compatibility --env-file .env -f compose/docker-compose.yml \
             -f compose/docker-compose.prod.yml -f compose/docker-compose.windows.yml config -q
 
       - name: Set up Node.js
