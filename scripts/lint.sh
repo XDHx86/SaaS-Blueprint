@@ -61,7 +61,10 @@ if [ -d services/backend/node_modules ]; then
 
     if (
       cd services/backend
-      npx --no-install mmdc -i "../../$f" -o "../../$output"
+      npx --no-install mmdc \
+          -p ../../puppeteer-config.json \
+          -i "../../$f" \
+          -o "../../$output"
     ); then
       printf '  \033[32mPASS\033[0m  %s\n' "$f"
     else
