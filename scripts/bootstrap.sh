@@ -41,11 +41,10 @@ fi
 
 # --- a random secret generator ----------------------------------------------
 rand() {
-  # Prefer openssl; fall back to /dev/urandom + base64.
   if command -v openssl >/dev/null 2>&1; then
-    openssl rand -base64 24 | tr -d '\n'
+    openssl rand -hex 24
   else
-    head -c 24 /dev/urandom | base64 | tr -d '\n'
+    od -An -tx1 -N24 /dev/urandom | tr -d ' \n'
   fi
 }
 
