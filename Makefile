@@ -11,8 +11,21 @@
 SHELL        := /usr/bin/env bash
 
 COMPOSE      ?= docker compose
-DEV_FILES    := -f compose/docker-compose.yml -f compose/docker-compose.override.yml
-PROD_FILES   := -f compose/docker-compose.yml -f compose/docker-compose.prod.yml
+
+# The base node-exporter bind-mounts the host rootfs with `rslave` propagation,
+# which Docker Desktop on Windows does not support.
+# compose/docker-compose.windows.yml swaps it for a plain `ro` bind. Include it
+# automatically on Windows only: OS=Windows_NT is set by Windows' environment
+# and inherited even under Git Bash; on Linux/macOS $(OS) is unset, so
+# PLATFORM_FILES is empty and the resulting -f list is identical to before.
+ifeq ($(OS),Windows_NT)
+PLATFORM_FILES := -f compose/docker-compose.windows.yml
+else
+PLATFORM_FILES :=
+endif
+
+DEV_FILES    := -f compose/docker-compose.yml -f compose/docker-compose.override.yml $(PLATFORM_FILES)
+PROD_FILES   := -f compose/docker-compose.yml -f compose/docker-compose.prod.yml $(PLATFORM_FILES)
 ENV          ?= .env
 
 # --- Help --------------------------------------------------------------------

@@ -212,13 +212,11 @@ services:
     pid: host
     command:
       - "--path.rootfs=/host"
+    # Host rootfs mounts with `rslave` propagation (Linux/macOS). Docker Desktop
+    # on Windows lacks `rslave`; `make` loads compose/docker-compose.windows.yml
+    # automatically there to swap the root mount for a plain `ro` bind.
     volumes:
-    # Mount propagation is not supported the same way it is on native Linux as it is on Windows, 
-    # so we use rslave to allow the container to see changes in the host filesystem.
-    # If you are running on Windows, delete the `rslave` option and use `ro` instead. 
-    # This will work for most cases, but some metrics may not be available.
-    # An error will be thrown if the container cannot access the host filesystem, so make sure to test your setup.
-      - "/:/host:ro"
+      - "/:/host:ro,rslave"
       - "/proc:/host/proc:ro"
       - "/sys:/host/sys:ro"
     expose: ["9100"]

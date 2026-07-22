@@ -246,7 +246,7 @@ infrastructure-lab/
 ├── .env.example           # fully commented environment template
 │
 ├── architecture/diagrams/ # diagrams-as-code: *.mmd sources
-├── compose/               # base + local override + prod overlay
+├── compose/               # base + dev override + prod + Windows platform override
 ├── services/              # minimal runnable frontend + backend
 │   ├── frontend/          # nginx static (Dockerfile + public/)
 │   └── backend/           # Fastify health API (Dockerfile + src/ + test/)

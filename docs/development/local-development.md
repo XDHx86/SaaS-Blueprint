@@ -50,5 +50,5 @@ If a tool speeds your loop (e.g. `nodemon`, a test file watcher), wire it into t
 
 - [branch-strategy.md](branch-strategy.md) — where the changes go next
 - [release-strategy.md](release-strategy.md) — how a merged change ships
-- [`compose/README.md`](../../compose/README.md) — how the three compose files relate
+- [`compose/README.md`](../../compose/README.md) — how the compose files relate
 - [../getting-started.md](../getting-started.md) — the first-run path

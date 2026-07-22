@@ -37,6 +37,10 @@ grafana_data/
 prometheus_data/
 node_modules/
 *.log
+.tmp/
+*.temp
+*.tmp
+coverage/
 
 # ---- OS / editors ----
 .DS_Store
@@ -44,3 +48,10 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+# ---- Docker noise ----
+*.pid
+*.seed
+*.swp
+.Dockerfile*
+docker-compose*.yml

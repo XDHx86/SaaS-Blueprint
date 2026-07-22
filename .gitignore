@@ -16,6 +16,10 @@ caddy_data/
 caddy_config/
 grafana_data/
 prometheus_data/
+.tmp/
+*.temp
+*.tmp
+coverage/
 
 # ---- Logs ----
 *.log

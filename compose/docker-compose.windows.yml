@@ -1,0 +1,29 @@
+# =============================================================================
+# Infrastructure Lab — Windows platform override
+# =============================================================================
+# Applied automatically by `make` ONLY on Windows (OS=Windows_NT), layered on
+# top of the base AND the dev/prod context overlays. Linux and macOS never load
+# this file — their node-exporter keep the base `rslave` mounts unchanged.
+#
+# Why this exists:
+#   The base node-exporter bind-mounts the host rootfs with `rslave` mount
+#   propagation so the container observes host filesystem changes. Docker
+#   Desktop on Windows does not support `rslave`, so here we swap the root
+#   mount for a plain `ro` bind (/proc and /sys stay read-only, as in the
+#   base). This mirrors the documented Windows workaround: it works for most
+#   cases, but some node-exporter metrics that rely on host filesystem change
+#   events may be unavailable.
+#
+# Why `!override`:
+#   Compose appends service volumes by default, which would double-bind
+#   /host, /host/proc and /host/sys (the base already defines them) and fail.
+#   `volumes: !override` REPLACES the base mounts. This is the same Compose
+#   spec family as the `!reset null` used by docker-compose.prod.yml.
+# =============================================================================
+
+services:
+  node-exporter:
+    volumes: !override
+      - "/:/host:ro"
+      - "/proc:/host/proc:ro"
+      - "/sys:/host/sys:ro"

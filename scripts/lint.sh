@@ -43,20 +43,36 @@ check() {
 check "base"                     -f compose/docker-compose.yml
 check "base + local override"    -f compose/docker-compose.yml -f compose/docker-compose.override.yml
 check "base + prod (--compatibility)" --compatibility -f compose/docker-compose.yml -f compose/docker-compose.prod.yml
+# Windows platform overlay (node-exporter rslave→ro swap). Validated on every
+# host so the override is exercised in CI even though `make` only loads it on
+# Windows (CI runs on Ubuntu; Windows contributors can't catch a broken file
+# locally). These match what `make up` / `make prod-up` run on Windows.
+check "base + windows"            -f compose/docker-compose.yml -f compose/docker-compose.windows.yml
+check "base + override + windows" -f compose/docker-compose.yml -f compose/docker-compose.override.yml -f compose/docker-compose.windows.yml
+check "base + prod + windows (--compatibility)" --compatibility -f compose/docker-compose.yml -f compose/docker-compose.prod.yml -f compose/docker-compose.windows.yml
 
-echo "== diagrams (placeholder) =="
+echo "== diagrams =="
 
-if command -v mmdc >/dev/null 2>&1; then
+if [ -d services/backend/node_modules ]; then
+  mkdir -p .tmp/mermaid
+
   for f in architecture/diagrams/*.mmd; do
-    if mmdc -i "$f" -o /dev/null >/dev/null 2>&1; then
+    output=".tmp/mermaid/$(basename "$f" .mmd).svg"
+
+    if (
+      cd services/backend
+      npx --no-install mmdc -i "../../$f" -o "../../$output" > /dev/null 2>&1
+    ); then
       printf '  \033[32mPASS\033[0m  %s\n' "$f"
     else
       printf '  \033[31mFAIL\033[0m  %s\n' "$f"
       fail=1
     fi
+
+    rm -f "$output"
   done
 else
-  echo "  mmdc not installed; diagram rendering not validated. Install @mermaid-js/mermaid-cli to enable."
+  echo "  backend dependencies not installed; skipping diagrams."
 fi
 
 echo
