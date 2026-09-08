@@ -13,11 +13,11 @@
     "node": ">=20"
   },
   "dependencies": {
-    "fastify": "^5.2.0",
-    "pg": "^8.13.1",
-    "redis": "^6.1.0"
+    "fastify": "^5.12.3",
+    "pg": "^8.23.0",
+    "redis": "^6.2.1"
   },
   "devDependencies": {
-    "@mermaid-js/mermaid-cli": "^11.16.0"
+    "@mermaid-js/mermaid-cli": "^11.17.0"
   }
 }
